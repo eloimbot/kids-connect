@@ -1,0 +1,22 @@
+{
+  "aps": [
+    {
+      "id": "ap-lab1",
+      "name": "AP-Lab1",
+      "host": "your ip",
+      "sshUser": "root",
+      "sshPassword": "tu_password",
+      "vlan": 10,
+      "description": "AP laboratorio"
+    },
+    {
+      "id": "ap-lab2",
+      "name": "AP-Lab2",
+      "host": "your ip",
+      "sshUser": "root",
+      "sshPassword": "tu_password",
+      "vlan": 20,
+      "description": "AP oficina"
+    }
+  ]
+}

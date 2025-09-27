@@ -1,49 +1,51 @@
+```bash
 #!/bin/bash
+
+# ===============================
+# Install script for Kids-Connect
+# ===============================
+
 set -e
 
-echo "🔧 Actualizando sistema..."
+echo "🔄 Actualizando sistema..."
 sudo apt update && sudo apt upgrade -y
 
 echo "📦 Instalando dependencias..."
-sudo apt install -y git curl
+sudo apt install -y git curl nodejs npm
 
-# Instalar Node.js 20 si no existe
+# Verificar Node.js
 if ! command -v node &> /dev/null; then
-  echo "⬇️ Instalando Node.js 20..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt install -y nodejs
+  echo "❌ Node.js no se instaló correctamente. Abortando."
+  exit 1
 fi
 
 # Carpeta de instalación
-INSTALL_DIR=~/Documents/kids-connect
+INSTALL_DIR="$HOME/Documents/kids-connect"
 
-# Si ya existe, actualizar
+# Clonar o actualizar repo
 if [ -d "$INSTALL_DIR" ]; then
-  echo "📂 Carpeta ya existe, actualizando repo..."
+  echo "📂 El repositorio ya existe, actualizando..."
   cd "$INSTALL_DIR"
   git pull
 else
-  echo "⬇️ Clonando repo..."
-  git clone https://github.com/eloimbot/kids-connect.git "$INSTALL_DIR"
-  cd "$INSTALL_DIR"
+  echo "⬇️ Clonando repositorio..."
+  mkdir -p "$HOME/Documents"
+  cd "$HOME/Documents"
+  git clone https://github.com/eloimbot/kids-connect.git
+  cd kids-connect
 fi
 
-echo "⚙️ Instalando dependencias backend..."
+# Backend
+echo "⚙️ Instalando dependencias del backend..."
 cd backend
 npm install
 
-echo "⚙️ Instalando dependencias frontend..."
+# Frontend
+echo "⚙️ Instalando dependencias del frontend..."
 cd ../frontend
 npm install
 
-echo "🚀 Iniciando backend..."
-cd ../backend
-nohup npm start > backend.log 2>&1 &
-
-echo "🚀 Iniciando frontend..."
-cd ../frontend
-nohup npm run dev > frontend.log 2>&1 &
-
-echo "✅ Instalación completa."
-echo "Frontend disponible en: http://localhost:5173"
-echo "Backend disponible en: http://localhost:5000"
+echo "✅ Instalación completada."
+echo "👉 Para arrancar el backend: cd $INSTALL_DIR/backend && npm start"
+echo "👉 Para arrancar el frontend: cd $INSTALL_DIR/frontend && npm run dev"
+```

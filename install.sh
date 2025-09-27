@@ -1,39 +1,99 @@
-```bash
+@@ -1,61 +1,49 @@
 #!/bin/bash
 set -e
 
-# === Kids Connect Install Script ===
-# Instala dependencias, clona o actualiza el repo y arranca frontend + backend
+REPO="https://github.com/eloimbot/kids-connect.git"
+DIR="/opt/kids-connect"
+BACKEND_DIR="$DIR/backend"
+FRONTEND_DIR="$DIR/frontend"
+SERVICE_NAME="kids-connect.service"
 
-# 1. Actualizar sistema
-sudo apt-get update
-sudo apt-get upgrade -y
+echo "=== Instalación Kids-Connect en Linux ==="
 
-# 2. Instalar dependencias
-sudo apt-get install -y git nodejs npm
+# Dependencias
+apt update
+apt install -y git curl build-essential nginx
 
-# 3. Crear carpeta en Documentos si no existe
-PROJECT_DIR="$HOME/Documents/kids-connect"
-mkdir -p "$PROJECT_DIR"
+# Node.js
+if ! command -v node >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt install -y nodejs
+echo "🔧 Actualizando sistema..."
+sudo apt update && sudo apt upgrade -y
 
-# 4. Clonar o actualizar repo
-if [ -d "$PROJECT_DIR/.git" ]; then
-    echo "Repositorio encontrado, actualizando..."
-    cd "$PROJECT_DIR"
-    git pull
-else
-    echo "Clonando repositorio..."
-    git clone https://github.com/eloimbot/kids-connect.git "$PROJECT_DIR"
-    cd "$PROJECT_DIR"
+echo "📦 Instalando dependencias..."
+sudo apt install -y git curl
+
+# Instalar Node.js 20 si no existe
+if ! command -v node &> /dev/null; then
+  echo "⬇️ Instalando Node.js 20..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt install -y nodejs
 fi
 
-# 5. Instalar dependencias frontend y backend
-cd frontend
-npm install
-cd ../backend
+# Clonar repo
+if [ -d "$DIR" ]; then
+  cd "$DIR"
+# Carpeta de instalación
+INSTALL_DIR=~/Documents/kids-connect
+
+# Si ya existe, actualizar
+if [ -d "$INSTALL_DIR" ]; then
+  echo "📂 Carpeta ya existe, actualizando repo..."
+  cd "$INSTALL_DIR"
+  git pull
+else
+  git clone "$REPO" "$DIR"
+  echo "⬇️ Clonando repo..."
+  git clone https://github.com/eloimbot/kids-connect.git "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
+fi
+
+# Backend
+cd "$BACKEND_DIR"
+echo "⚙️ Instalando dependencias backend..."
+cd backend
 npm install
 
-echo "Instalación completada ✅"
-echo "Para arrancar el backend: cd $PROJECT_DIR/backend && npm start"
-echo "Para arrancar el frontend: cd $PROJECT_DIR/frontend && npm run dev"
-```
+# Frontend
+cd "$FRONTEND_DIR"
+echo "⚙️ Instalando dependencias frontend..."
+cd ../frontend
+npm install
+npm run build
+
+# Servicio systemd
+cat <<EOF | sudo tee /etc/systemd/system/$SERVICE_NAME
+[Unit]
+Description=Kids-Connect Backend
+After=network.target
+
+[Service]
+WorkingDirectory=$BACKEND_DIR
+ExecStart=/usr/bin/node $BACKEND_DIR/server.js
+Restart=always
+User=root
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable $SERVICE_NAME
+systemctl restart $SERVICE_NAME
+
+echo "=== Kids-Connect instalado en Linux ==="
+echo "Accede en http://<IP>:3000 o configura NGINX si quieres HTTPS"
+
+echo "🚀 Iniciando backend..."
+cd ../backend
+nohup npm start > backend.log 2>&1 &
+
+echo "🚀 Iniciando frontend..."
+cd ../frontend
+nohup npm run dev > frontend.log 2>&1 &
+
+echo "✅ Instalación completa."
+echo "Frontend disponible en: http://localhost:5173"
+echo "Backend disponible en: http://localhost:5000"

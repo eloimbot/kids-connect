@@ -1,38 +1,39 @@
 ```bash
 #!/bin/bash
-set -e  # Si algo falla, el script se detiene
+set -e
 
-# Actualizar paquetes
-sudo apt update
-sudo apt upgrade -y
+# === Kids Connect Install Script ===
+# Instala dependencias, clona o actualiza el repo y arranca frontend + backend
 
-# Instalar dependencias
-sudo apt install -y git nodejs npm
+# 1. Actualizar sistema
+sudo apt-get update
+sudo apt-get upgrade -y
 
-# Definir carpeta de instalación
-INSTALL_DIR="$HOME/Documents/kids-connect"
+# 2. Instalar dependencias
+sudo apt-get install -y git nodejs npm
 
-# Clonar o actualizar el repositorio
-if [ -d "$INSTALL_DIR" ]; then
-    echo "Repositorio ya existe, actualizando..."
-    cd "$INSTALL_DIR"
+# 3. Crear carpeta en Documentos si no existe
+PROJECT_DIR="$HOME/Documents/kids-connect"
+mkdir -p "$PROJECT_DIR"
+
+# 4. Clonar o actualizar repo
+if [ -d "$PROJECT_DIR/.git" ]; then
+    echo "Repositorio encontrado, actualizando..."
+    cd "$PROJECT_DIR"
     git pull
 else
     echo "Clonando repositorio..."
-    mkdir -p "$HOME/Documents"
-    git clone https://github.com/eloimbot/kids-connect.git "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
+    git clone https://github.com/eloimbot/kids-connect.git "$PROJECT_DIR"
+    cd "$PROJECT_DIR"
 fi
 
-# Instalar dependencias del backend
-cd backend
+# 5. Instalar dependencias frontend y backend
+cd frontend
+npm install
+cd ../backend
 npm install
 
-# Instalar dependencias del frontend
-cd ../frontend
-npm install
-
-echo "✅ Instalación completada. Para arrancar:"
-echo "   cd $INSTALL_DIR/backend && npm start   # Inicia el backend"
-echo "   cd $INSTALL_DIR/frontend && npm run dev # Inicia el frontend"
+echo "Instalación completada ✅"
+echo "Para arrancar el backend: cd $PROJECT_DIR/backend && npm start"
+echo "Para arrancar el frontend: cd $PROJECT_DIR/frontend && npm run dev"
 ```
